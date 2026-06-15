@@ -24,14 +24,20 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 
+use App\Models\Hotel;
+
 Route::get('/seed-pro', function () {
     try {
-        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', [
-            '--seed' => true,
-            '--force' => true
+        // Creamos el primer hotel usando tu modelo real de Laravel
+        Hotel::create([
+            'nombre' => 'ARTIEM Audax',
+            'direccion' => 'Av. de la Platja, s/n',
+            'ciudad' => 'Menorca',
+            'galeria_fotos' => '["https://images.unsplash.com/photo-1582719508461-905c673771fd", "https://images.unsplash.com/photo-1584132967334-10e028bd69f7", "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4", "https://images.unsplash.com/photo-1566073771259-6a8506099945"]'
         ]);
-        return "¡Base de datos de producción sembrada con éxito!";
+
+        return "¡Primer hotel de ARTIEM creado con éxito en la base de datos de producción!";
     } catch (\Exception $e) {
-        return "Error al sembrar la base de datos: " . $e->getMessage();
+        return "Error al guardar en PostgreSQL: " . $e->getMessage();
     }
 });
