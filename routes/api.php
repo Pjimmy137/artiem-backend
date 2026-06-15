@@ -22,3 +22,16 @@ Route::apiResource('testimonios', TestimonioController::class);
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+
+Route::get('/seed-pro', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', [
+            '--seed' => true,
+            '--force' => true
+        ]);
+        return "¡Base de datos de producción sembrada con éxito!";
+    } catch (\Exception $e) {
+        return "Error al sembrar la base de datos: " . $e->getMessage();
+    }
+});
