@@ -26,9 +26,11 @@ class ReservaController extends Controller
         // 1. Validamos los datos entrantes (Cambiado a 'hotel_id' que es lo que manda Angular)
         $request->validate([
             'hotel_id' => 'required|integer',
+            'hotel_nombre' => 'nullable|string',
             'tipo_habitacion' => 'required|string',
             'fecha_entrada' => 'required|date',
             'fecha_salida' => 'required|date',
+            'noches' => 'nullable|integer',
             'cliente.email' => 'required|email',
             'cliente.nombre' => 'required|string',
             'monto_total' => 'required',
@@ -91,14 +93,17 @@ class ReservaController extends Controller
             DB::commit(); // Confirmamos la persistencia en PostgreSQL
 
             // 1. Extraemos el correo del cliente que viene en la petición del Checkout
+            DB::commit(); // Confirmamos la persistencia en PostgreSQL
+
+            // 1. Extraemos el correo del cliente que viene en la petición del Checkout
             $correoCliente = $request->input('cliente.email');
 
-            // 2. Preparamos los datos que pasaremos a la plantilla del email
+            // 2. Preparamos los datos cruzando las claves EXACTAS que envía tu Frontend
             $datosParaEmail = [
-                'hotel_nombre' => $request->input('hotel_nombre'),
+                'nombre'          => $request->input('hotel_nombre') ?? 'ARTIEM Hotel',
                 'tipo_habitacion' => $request->input('tipo_habitacion'),
-                'noches' => $request->input('noches'),
-                'precio_total' => $request->input('precio_total'),
+                'noches'          => $request->input('noches') ?? 1,
+                'precio_total'    => $request->input('monto_total'),
             ];
 
             // 3. Enviamos el correo de verdad a producción
