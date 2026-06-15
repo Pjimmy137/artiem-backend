@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ConfirmacionReserva;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use App\Models\Reserva;
 use App\Models\Cliente;
@@ -87,6 +89,20 @@ class ReservaController extends Controller
             $reserva->habitaciones()->attach($habitacionLibre->id_habitacion, ['cantidad' => 1]);
 
             DB::commit(); // Confirmamos la persistencia en PostgreSQL
+
+            // 1. Extraemos el correo del cliente que viene en la petición del Checkout
+            $correoCliente = $request->input('cliente.email');
+
+            // 2. Preparamos los datos que pasaremos a la plantilla del email
+            $datosParaEmail = [
+                'hotel_nombre' => $request->input('hotel_nombre'),
+                'tipo_habitacion' => $request->input('tipo_habitacion'),
+                'noches' => $request->input('noches'),
+                'precio_total' => $request->input('precio_total'),
+            ];
+
+            // 3. Enviamos el correo de verdad a producción
+            Mail::to($correoCliente)->send(new ConfirmacionReserva($datosParaEmail));
 
             return response()->json([
                 'success' => true,
