@@ -100,7 +100,7 @@ class ReservaController extends Controller
 
             // 2. Preparamos los datos cruzando las claves EXACTAS que envía tu Frontend
             $datosParaEmail = [
-                'nombre'          => $request->input('hotel_nombre') ?? 'ARTIEM Hotel',
+                'hotel_nombre'          => $request->input('hotel_nombre') ?? 'ARTIEM Hotel',
                 'tipo_habitacion' => $request->input('tipo_habitacion'),
                 'noches'          => $request->input('noches') ?? 1,
                 'precio_total'    => $request->input('monto_total'),
