@@ -90,25 +90,40 @@ class ReservaController extends Controller
             // 🌟 CAMBIADO: '$habitacionLibre->id' por '$habitacionLibre->id_habitacion'
             $reserva->habitaciones()->attach($habitacionLibre->id_habitacion, ['cantidad' => 1]);
 
-            DB::commit(); // Confirmamos la persistencia en PostgreSQL
+           DB::commit(); // Confirmamos la persistencia en PostgreSQL
 
-            // 1. Extraemos el correo del cliente que viene en la petición del Checkout
-            DB::commit(); // Confirmamos la persistencia en PostgreSQL
+            // 1. Buscamos el nombre real del hotel en la base de datos usando el ID recibido
+            $hotel = \App\Models\Hotel::find($request->input('hotel_id'));
+            $nombreHotel = $hotel ? $hotel->nombre : 'ARTIEM Hotel';
 
-            // 1. Extraemos el correo del cliente que viene en la petición del Checkout
-            $correoCliente = $request->input('cliente.email');
+            // 2. Calculamos las noches matemáticamente en el backend con las fechas reales del Request
+            $fechaEntrada = \Carbon\Carbon::parse($request->input('fecha_entrada'));
+            $fechaSalida = \Carbon\Carbon::parse($request->input('fecha_salida'));
+            $nochesCalculadas = $fechaEntrada->diffInDays($fechaSalida);
 
-            // 2. Preparamos los datos cruzando las claves EXACTAS que envía tu Frontend
+            // 3. Extraemos los nombres de los servicios wellness si el usuario eligió alguno
+            $extrasEnviados = $request->input('extras', []);
+            $nombresExtras = [];
+            if (is_array($extrasEnviados)) {
+                foreach ($extrasEnviados as $extra) {
+                    if (isset($extra['nombre'])) {
+                        $nombresExtras[] = $extra['nombre'] . ' (' . ($extra['precio_extra'] ?? 0) . '€)';
+                    }
+                }
+            }
+
+            // 4. Preparamos el array final para la plantilla del correo electrónico
             $datosParaEmail = [
-                'hotel_nombre'          => $request->input('hotel_nombre') ?? 'ARTIEM Hotel',
+                'nombre'          => $nombreHotel,
                 'tipo_habitacion' => $request->input('tipo_habitacion'),
-                'noches'          => $request->input('noches') ?? 1,
+                'noches'          => $nochesCalculadas > 0 ? $nochesCalculadas : 1,
                 'precio_total'    => $request->input('monto_total'),
+                'extras'          => $nombresExtras // Enviamos la lista de masajes/circuitos
             ];
 
-            // 3. Enviamos el correo de verdad a producción
+            // 5. Enviamos el correo al cliente
+            $correoCliente = $request->input('cliente.email');
             Mail::to($correoCliente)->send(new ConfirmacionReserva($datosParaEmail));
-
             return response()->json([
                 'success' => true,
                 'mensaje' => 'Reserva realizada correctamente',
